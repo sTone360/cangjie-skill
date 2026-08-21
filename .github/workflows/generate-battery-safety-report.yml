@@ -1,0 +1,40 @@
+name: Generate battery safety report DOCX
+
+on:
+  push:
+    branches:
+      - chatgpt-docx-download-fix-20260821
+    paths:
+      - tools/generate_battery_safety_report.py
+      - .github/workflows/generate-battery-safety-report.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-docx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip python-docx
+      - name: Generate and validate DOCX
+        run: python tools/generate_battery_safety_report.py
+      - name: Upload DOCX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: battery-safety-report-docx
+          path: |
+            dist/1.docx
+            dist/面向搭载锂离子电池特种装备的电池大模型及主动安全防护技术研究指南及论证报告.docx
+          if-no-files-found: error
+          retention-days: 7
