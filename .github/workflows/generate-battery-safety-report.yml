@@ -7,6 +7,12 @@ on:
     paths:
       - tools/generate_battery_safety_report.py
       - .github/workflows/generate-battery-safety-report.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - tools/generate_battery_safety_report.py
+      - .github/workflows/generate-battery-safety-report.yml
   workflow_dispatch:
 
 permissions:
