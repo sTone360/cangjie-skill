@@ -1,12 +1,6 @@
 name: Generate battery safety report DOCX
 
 on:
-  push:
-    branches:
-      - chatgpt-docx-download-fix-20260821
-    paths:
-      - tools/generate_battery_safety_report.py
-      - .github/workflows/generate-battery-safety-report.yml
   pull_request:
     branches:
       - main
@@ -17,6 +11,10 @@ on:
 
 permissions:
   contents: write
+
+concurrency:
+  group: battery-safety-report-docx
+  cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -29,6 +27,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: chatgpt-docx-download-fix-20260821
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -39,11 +38,12 @@ jobs:
         run: python tools/generate_battery_safety_report.py
       - name: Publish generated DOCX files to branch
         run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin chatgpt-docx-download-fix-20260821
           mkdir -p downloads
           cp -f dist/1.docx downloads/1.docx
           cp -f 'dist/面向搭载锂离子电池特种装备的电池大模型及主动安全防护技术研究指南及论证报告.docx' 'downloads/面向搭载锂离子电池特种装备的电池大模型及主动安全防护技术研究指南及论证报告.docx'
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add downloads
           if git diff --cached --quiet; then
             echo 'Generated DOCX files are unchanged.'
