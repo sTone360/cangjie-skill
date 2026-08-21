@@ -1,0 +1,62 @@
+name: Generate battery safety report DOCX
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - tools/generate_battery_safety_report.py
+      - .github/workflows/generate-battery-safety-report.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: battery-safety-report-docx
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-docx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository branch
+        uses: actions/checkout@v4
+        with:
+          ref: chatgpt-docx-download-fix-20260821
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip python-docx
+      - name: Generate and validate DOCX
+        run: python tools/generate_battery_safety_report.py
+      - name: Publish generated DOCX files to branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin chatgpt-docx-download-fix-20260821
+          mkdir -p downloads
+          cp -f dist/1.docx downloads/1.docx
+          cp -f 'dist/面向搭载锂离子电池特种装备的电池大模型及主动安全防护技术研究指南及论证报告.docx' 'downloads/面向搭载锂离子电池特种装备的电池大模型及主动安全防护技术研究指南及论证报告.docx'
+          git add downloads
+          if git diff --cached --quiet; then
+            echo 'Generated DOCX files are unchanged.'
+          else
+            git commit -m 'Publish generated battery safety report DOCX'
+            git push origin HEAD:chatgpt-docx-download-fix-20260821
+          fi
+      - name: Upload DOCX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: battery-safety-report-docx
+          path: |
+            dist/1.docx
+            dist/面向搭载锂离子电池特种装备的电池大模型及主动安全防护技术研究指南及论证报告.docx
+          if-no-files-found: error
+          retention-days: 7
